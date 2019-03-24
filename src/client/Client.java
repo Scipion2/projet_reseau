@@ -46,11 +46,12 @@ public class Client
         BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
         out.println("CONNECT "+pseudal);
+        
+        new Thread(new Handler(client)).start();
 
         for(;;)
         {
-
-            new Thread(new Handler(client)).start();
+            
             toSend=sc.nextLine();
             String tmp="MSG " + toSend;
             out.println(tmp);
@@ -76,15 +77,21 @@ public class Client
         }
 
 
-        public void run() {
+        public void run() 
+        {
+            
+            for(;;)
+            {
 
-            try {
-                received=in.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
+                try {
+                    received=in.readLine();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println(received);
+                
             }
-
-            System.out.println(received);
 
         }
 
