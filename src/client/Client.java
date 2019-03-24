@@ -57,7 +57,6 @@ public class Client
             out.println(tmp);
 
         }
-
     }
 
     class Handler implements Runnable{
@@ -90,12 +89,7 @@ public class Client
                 }
 
                 System.out.println(received);
-                
             }
-
         }
-
-
     }
-
 }
