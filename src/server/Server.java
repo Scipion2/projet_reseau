@@ -5,49 +5,65 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.UnknownHostException;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import static java.lang.System.exit;
 
-public class Server
-{
+public class Server {
 
-    String serv;
     int port;
-   // List
+    List<File> fil;
 
 
-    public Server(String serv, int port) throws UnknownHostException {
-
-        this.serv = serv;
+    public Server(int port) throws UnknownHostException {
         this.port = port;
-
+        fil=null;
     }
 
-    public void sendPack() throws IOException {
+    public void launch() throws IOException {
 
-        Scanner sc = new Scanner(System.in);
-        ServerSocket ss=new ServerSocket();
-        Socket socket = new Socket(serv, port);
-        String msg = null;
-        String servMsg;
-        BufferedReader in;
+        //Scanner sc = new Scanner(System.in);
+        ServerSocket ss = new ServerSocket(port);
+        //Socket socket = new Socket(ss.getInetAddress(), port);
+        //String msg = null;
+        //String servMsg;
+        //BufferedReader in;
 
-        ss.accept();
+       ss.accept();
 
         new Thread((new Handler(ss.accept()))).start();
+        try {
+            ss = new ServerSocket(port);
+            ss.setReuseAddress(true);
+            while (true) {
+                (new Handler(ss.accept())).run();
+            }
+        } catch (IOException ex) {
+            System.out.println("Arrêt anormal du serveur.");
+            return;
+        }
+    }
 
-       for(;;)
-       {
+    public static void main(String[] args) {
 
 
+        if(args.length!=1){
+            System.out.println("Erreur d'arguments: @port");
+            return;
 
-       }
+        }
+
+        try {
+            Server s = new Server(Integer.parseInt(args[0]));
+            s.launch();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
-
 
 
     class Handler implements Runnable {
@@ -64,29 +80,42 @@ public class Server
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             hote = socket.getInetAddress();
             port = socket.getPort();
+            File f=new File(this.socket);
+            fil.add(f);
         }
 
         public void run() {
             String tampon;
+
+            String pseudo = null;
             long compteur = 0;
+
 
             try {
                 /* envoi du message d'accueil */
-                out.println("Bonjour " + hote + "! (vous utilisez le port " + port + ")");
+                // out.println("Bonjour " + hote + "! (vous utilisez le port " + port + ")");
 
                 do {
                     /* Faire echo et logguer */
                     tampon = in.readLine();
                     if (tampon != null) {
-                        compteur++;
-                        /* log */
-                        //System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
-                        /* echo vers le client */
-                        //tampon.
-                        out.println("> " + tampon);
-                    } else {
-                        break;
-                    }
+                        if (pseudo == null) {
+                            pseudo = tampon.substring(8);
+                            this.affiche(pseudo+" vient de nous rejoindre");
+                        } else {
+                            compteur++;
+                            /* log */
+                            //System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
+                            /* echo vers le client */
+                            tampon.substring(4);
+
+                            out.println(pseudo + "> " + tampon);
+                        }
+                        }
+                        else{
+                            break;
+                        }
+
                 } while (true);
 
                 /* le correspondant a quitté */
@@ -100,7 +129,12 @@ public class Server
                 e.printStackTrace();
             }
         }
+
+        private void affiche(String s)
+        {
+
+            
+
+        }
     }
-
-
 }

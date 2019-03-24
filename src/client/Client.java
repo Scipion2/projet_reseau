@@ -20,7 +20,6 @@ public class Client
 
         this.port=port;
         this.adr=adr;
-        this.launch();
 
     }
 
@@ -49,14 +48,36 @@ public class Client
         
         new Thread(new Handler(client)).start();
 
-        for(;;)
-        {
-            
-            toSend=sc.nextLine();
-            String tmp="MSG " + toSend;
+        while (true) {
+
+            toSend = sc.nextLine();
+            String tmp = "MSG " + toSend;
             out.println(tmp);
 
         }
+    }
+
+
+
+    public static void main(String[] args)
+    {
+
+        if(args.length!=2)
+        {
+            System.out.println("Erreur d'arguments: @adr @port");
+            return;
+        }
+
+        try {
+
+            Client c = new Client(args[0], Integer.parseInt(args[1]));
+            c.launch();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     class Handler implements Runnable{
