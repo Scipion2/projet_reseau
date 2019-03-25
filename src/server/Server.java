@@ -6,10 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.UnknownHostException;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
-import static java.lang.System.exit;
 
 public class Server {
 
@@ -17,20 +14,14 @@ public class Server {
     List<File> fil;
 
 
-    public Server(int port) throws UnknownHostException {
+    public Server(int port){
         this.port = port;
         fil=null;
     }
 
     public void launch() throws IOException {
 
-        //Scanner sc = new Scanner(System.in);
-        ServerSocket ss = new ServerSocket(port);
-        //Socket socket = new Socket(ss.getInetAddress(), port);
-        //String msg = null;
-        //String servMsg;
-        //BufferedReader in;
-
+       ServerSocket ss = new ServerSocket(port);
        ss.accept();
 
         new Thread((new Handler(ss.accept()))).start();
@@ -44,6 +35,21 @@ public class Server {
             System.out.println("Arrêt anormal du serveur.");
             return;
         }
+    }
+
+    public void message(String s,Socket src)
+    {
+
+        for(int i=0;i<fil.size();++i)
+        {
+
+            File temp=fil.get(i);
+            temp.add(s,src);
+            fil.set(i,temp);
+
+
+        }
+
     }
 
     public static void main(String[] args) {
@@ -109,7 +115,8 @@ public class Server {
                             /* echo vers le client */
                             tampon.substring(4);
 
-                            out.println(pseudo + "> " + tampon);
+                            //out.println(pseudo + "> " + tampon);
+                            message(pseudo+"> "+tampon,socket);
                         }
                         }
                         else{
@@ -133,8 +140,9 @@ public class Server {
         private void affiche(String s)
         {
 
-            
+            out.println(s);
 
         }
+
     }
 }
