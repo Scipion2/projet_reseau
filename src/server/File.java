@@ -1,5 +1,7 @@
 package server;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -31,6 +33,17 @@ public class File
     {
 
         return src==this.client ? true:false;
+
+    }
+
+    public void send()throws IOException
+    {
+
+        PrintWriter out=new PrintWriter(client.getOutputStream(),true);
+        String msg=file.peek();
+        out.println(msg);
+        file.remove(msg);
+        out.close();
 
     }
 

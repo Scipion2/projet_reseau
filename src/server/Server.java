@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.rmi.UnknownHostException;
 import java.util.List;
 
 
@@ -98,24 +97,19 @@ public class Server {
 
 
             try {
-                /* envoi du message d'accueil */
-                // out.println("Bonjour " + hote + "! (vous utilisez le port " + port + ")");
 
                 do {
-                    /* Faire echo et logguer */
+
                     tampon = in.readLine();
                     if (tampon != null) {
                         if (pseudo == null) {
                             pseudo = tampon.substring(8);
-                            this.affiche(pseudo+" vient de nous rejoindre");
+                            message(pseudo+" vient de nous rejoindre",null);
                         } else {
                             compteur++;
-                            /* log */
-                            //System.err.println("[" + hote + ":" + port + "]: " + compteur + ":" + tampon);
-                            /* echo vers le client */
+
                             tampon.substring(4);
 
-                            //out.println(pseudo + "> " + tampon);
                             message(pseudo+"> "+tampon,socket);
                         }
                         }
@@ -129,19 +123,13 @@ public class Server {
                 in.close();
                 out.println("Au revoir...");
                 out.close();
+
                 socket.close();
 
                 System.err.println("[" + hote + ":" + port + "]: Terminé...");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-
-        private void affiche(String s)
-        {
-
-            out.println(s);
-
         }
 
     }
