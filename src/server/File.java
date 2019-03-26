@@ -16,6 +16,8 @@ public class File
 
         this.client=src;
         this.file=new ArrayBlockingQueue<String>(100);
+        //new Thread((new Handler())).start();
+        System.out.println("thread launched");
 
     }
 
@@ -42,8 +44,36 @@ public class File
         PrintWriter out=new PrintWriter(client.getOutputStream(),true);
         String msg=file.peek();
         out.println(msg);
+        System.out.println("msg= "+msg);
         file.remove(msg);
         out.close();
+
+        System.out.println("sent");
+
+    }
+
+    class Handler implements Runnable
+    {
+
+        Handler()
+        {}
+
+        public void run()
+        {
+
+            System.out.println("dans le thread");
+
+            for(;;)
+            {
+                try {
+                    send();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
 
     }
 

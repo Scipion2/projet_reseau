@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -15,15 +16,19 @@ public class Server {
 
     public Server(int port){
         this.port = port;
-        fil=null;
+        fil=new ArrayList<File>();
     }
 
     public void launch() throws IOException {
 
        ServerSocket ss = new ServerSocket(port);
-       ss.accept();
+       //ss.accept();
+
+       System.out.println("ss set");
 
         new Thread((new Handler(ss.accept()))).start();
+        System.out.println("first thread launched");
+
         try {
             ss = new ServerSocket(port);
             ss.setReuseAddress(true);
@@ -31,7 +36,7 @@ public class Server {
                 (new Handler(ss.accept())).run();
             }
         } catch (IOException ex) {
-            System.out.println("Arrêt anormal du serveur.");
+            System.out.println("ss.accept got exception");
             return;
         }
     }
@@ -39,6 +44,7 @@ public class Server {
     public void message(String s,Socket src)
     {
 
+        System.out.println("je suis dans message");
         for(int i=0;i<fil.size();++i)
         {
 
@@ -62,6 +68,7 @@ public class Server {
 
         try {
             Server s = new Server(Integer.parseInt(args[0]));
+            System.out.println("init");
             s.launch();
         } catch (IOException e) {
             e.printStackTrace();
@@ -85,7 +92,7 @@ public class Server {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             hote = socket.getInetAddress();
             port = socket.getPort();
-            File f=new File(this.socket);
+            File f=new File(socket);
             fil.add(f);
         }
 
@@ -93,7 +100,6 @@ public class Server {
             String tampon;
 
             String pseudo = null;
-            long compteur = 0;
 
 
             try {
@@ -104,13 +110,14 @@ public class Server {
                     if (tampon != null) {
                         if (pseudo == null) {
                             pseudo = tampon.substring(8);
+                            System.out.println(pseudo+" on");
                             message(pseudo+" vient de nous rejoindre",null);
                         } else {
-                            compteur++;
 
                             tampon.substring(4);
 
                             message(pseudo+"> "+tampon,socket);
+                            System.out.println("message send");
                         }
                         }
                         else{
@@ -119,9 +126,11 @@ public class Server {
 
                 } while (true);
 
+                System.out.println("closed");
+
                 /* le correspondant a quitté */
                 in.close();
-                out.println("Au revoir...");
+                System.out.println("Au revoir...");
                 out.close();
 
                 socket.close();
