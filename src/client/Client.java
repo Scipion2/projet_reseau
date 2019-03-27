@@ -8,6 +8,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Scanner;
 
+import static java.lang.System.exit;
+
 public class Client
 {
 
@@ -109,8 +111,18 @@ public class Client
                     e.printStackTrace();
                 }
 
+                if(received==null)
+                    break;
                 System.out.println(received);
             }
+
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            exit(0);
         }
     }
 }

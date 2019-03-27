@@ -22,21 +22,15 @@ public class Server {
     public void launch() throws IOException {
 
        ServerSocket ss = new ServerSocket(port);
-       //ss.accept();
-
-       System.out.println("ss set");
-
-        new Thread((new Handler(ss.accept()))).start();
-        System.out.println("first thread launched");
 
         try {
-            ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
+                ss.setReuseAddress(true);
             while (true) {
-                (new Handler(ss.accept())).run();
+                new Thread((new Handler(ss.accept()))).start();
             }
         } catch (IOException ex) {
             System.out.println("ss.accept got exception");
+            ex.printStackTrace();
             return;
         }
     }
@@ -44,7 +38,6 @@ public class Server {
     public void message(String s,Socket src)
     {
 
-        System.out.println("je suis dans message");
         for(int i=0;i<fil.size();++i)
         {
 
@@ -68,7 +61,6 @@ public class Server {
 
         try {
             Server s = new Server(Integer.parseInt(args[0]));
-            System.out.println("init");
             s.launch();
         } catch (IOException e) {
             e.printStackTrace();
@@ -107,26 +99,52 @@ public class Server {
                 do {
 
                     tampon = in.readLine();
-                    if (tampon != null) {
-                        if (pseudo == null) {
-                            pseudo = tampon.substring(8);
-                            System.out.println(pseudo+" on");
-                            message(pseudo+" vient de nous rejoindre",null);
-                        } else {
+                    if(tampon==null)
+                        break;
 
-                            tampon.substring(4);
+                    System.out.println(tampon);
 
-                            message(pseudo+"> "+tampon,socket);
-                            System.out.println("message send");
+                    if(tampon.length()>=7 && tampon.substring(0,7).equals("CONNECT"))
+                    {
+
+                        pseudo = tampon.substring(8);
+                        for(int i=0;i<fil.size();++i)
+                        {
+
+                            if(fil.get(i).isSocket(socket))
+                                fil.get(i).threading();
+
                         }
-                        }
-                        else{
-                            break;
-                        }
+                        message(pseudo+" vient de nous rejoindre",null);
+
+                    }else if(tampon.length()>=3 && tampon.substring(0,3).equals("MSG"))
+                    {
+
+                        message(pseudo+"> "+tampon.substring(4),socket);
+
+                    }else if(tampon.equals("EXIT"))
+                       break;
+
+
+                    tampon=null;
+
 
                 } while (true);
 
                 System.out.println("closed");
+
+                for(int i=0;i<fil.size();++i)
+                {
+
+                    if(fil.get(i).isSocket(socket))
+                    {
+
+                        fil.remove(fil.get(i));
+                        break;
+
+                    }
+
+                }
 
                 /* le correspondant a quitté */
                 in.close();

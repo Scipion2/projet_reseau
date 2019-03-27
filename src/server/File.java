@@ -16,8 +16,14 @@ public class File
 
         this.client=src;
         this.file=new ArrayBlockingQueue<String>(100);
-        //new Thread((new Handler())).start();
-        System.out.println("thread launched");
+
+
+    }
+
+    public void threading()
+    {
+
+        new Thread((new Handler())).start();
 
     }
 
@@ -31,7 +37,7 @@ public class File
 
     }
 
-    private boolean isSocket(Socket src)
+    public boolean isSocket(Socket src)
     {
 
         return src==this.client ? true:false;
@@ -41,14 +47,14 @@ public class File
     public void send()throws IOException
     {
 
+        if(file.isEmpty())
+            return;
+
         PrintWriter out=new PrintWriter(client.getOutputStream(),true);
         String msg=file.peek();
         out.println(msg);
-        System.out.println("msg= "+msg);
         file.remove(msg);
-        out.close();
 
-        System.out.println("sent");
 
     }
 
@@ -61,7 +67,6 @@ public class File
         public void run()
         {
 
-            System.out.println("dans le thread");
 
             for(;;)
             {
