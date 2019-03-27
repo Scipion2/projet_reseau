@@ -5,13 +5,13 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class File
+public class FileF
 {
 
     Socket client;
     ArrayBlockingQueue<String> file;
 
-    public File(Socket src)
+    public FileF(Socket src)
     {
 
         this.client=src;

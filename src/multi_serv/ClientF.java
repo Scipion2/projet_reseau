@@ -10,14 +10,14 @@ import java.util.Scanner;
 
 import static java.lang.System.exit;
 
-public class Client
+public class ClientF
 {
 
     int port;
     String adr;
     String pseudal;
 
-    public Client(String adr, int port)throws IOException
+    public ClientF(String adr, int port)throws IOException
     {
 
         this.port=port;
@@ -72,7 +72,7 @@ public class Client
 
         try {
 
-            Client c = new Client(args[0], Integer.parseInt(args[1]));
+            ClientF c = new ClientF(args[0], Integer.parseInt(args[1]));
             c.launch();
 
         } catch (IOException e) {
