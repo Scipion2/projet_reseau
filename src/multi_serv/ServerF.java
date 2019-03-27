@@ -1,27 +1,27 @@
 package multi_serv;
 
-import server.File;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 
-public class Server {
+public class ServerF {
 
     int port;
-    List<File> fil;
+    List<FileF> fil;
 
 
-    public Server(int port){
+    public ServerF(int port){
         this.port = port;
-        fil=new ArrayList<File>();
+        fil=new ArrayList<FileF>();
     }
 
     public void launch() throws IOException {
@@ -31,7 +31,7 @@ public class Server {
         try {
                 ss.setReuseAddress(true);
             while (true) {
-                new Thread((new Handler(ss.accept()))).start();
+                new Thread((new gestionMSG(ss.accept()))).start();
             }
         } catch (IOException ex) {
             System.out.println("ss.accept got exception");
@@ -46,7 +46,7 @@ public class Server {
         for(int i=0;i<fil.size();++i)
         {
 
-            File temp=fil.get(i);
+            FileF temp=fil.get(i);
             temp.add(s,src);
             fil.set(i,temp);
 
@@ -54,6 +54,46 @@ public class Server {
         }
 
     }
+
+    public void connecServ() {
+
+        int port=1234;
+        Socket socket= null;
+        try {
+            socket = new Socket("localhost",port);
+
+            System.out.println("Serveur connecté à un autre serveur");
+            new Thread(new serverConnection(socket)).start();
+            new Thread(new receiveFromServ(socket)).start();
+
+        } catch(ConnectException c){
+            System.err.println("Pas de 2eme serveur");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void sendToServ(Socket socket) throws IOException{
+
+        PrintWriter out= new PrintWriter(socket.getOutputStream(), true);
+
+        String toSend;
+
+        Scanner sc=new Scanner(System.in);
+
+        while (true) {
+
+            toSend = sc.nextLine();
+            String tmp = "MSG " + toSend;
+            out.println(tmp);
+
+        }
+
+
+    }
+
 
     public static void main(String[] args) {
 
@@ -65,7 +105,8 @@ public class Server {
         }
 
         try {
-            Server s = new Server(Integer.parseInt(args[0]));
+            ServerF s = new ServerF(Integer.parseInt(args[0]));
+            s.connecServ();
             s.launch();
         } catch (IOException e) {
             e.printStackTrace();
@@ -75,7 +116,7 @@ public class Server {
     }
 
 
-    class Handler implements Runnable {
+    class gestionMSG implements Runnable {
 
         Socket socket;
         PrintWriter out;
@@ -83,13 +124,13 @@ public class Server {
         InetAddress hote;
         int port;
 
-        Handler(Socket socket) throws IOException {
+        gestionMSG(Socket socket) throws IOException {
             this.socket = socket;
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             hote = socket.getInetAddress();
             port = socket.getPort();
-            File f=new File(socket);
+            FileF f=new FileF(socket);
             fil.add(f);
         }
 
@@ -97,7 +138,6 @@ public class Server {
             String tampon;
 
             String pseudo = null;
-
 
             try {
 
@@ -140,15 +180,11 @@ public class Server {
 
                 for(int i=0;i<fil.size();++i)
                 {
-
                     if(fil.get(i).isSocket(socket))
                     {
-
                         fil.remove(fil.get(i));
                         break;
-
                     }
-
                 }
 
                 /* le correspondant a quitté */
@@ -165,4 +201,65 @@ public class Server {
         }
 
     }
+
+    class receiveFromServ implements Runnable{
+
+        BufferedReader in;
+        Socket socket;
+
+        public receiveFromServ(Socket socket) throws IOException {
+
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.socket=socket;
+
+        }
+        @Override
+        public void run() {
+
+            String received=null;
+
+            while (true) {
+                try {
+                    received = in.readLine();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (received == null)
+                    break;
+                System.out.println(received);
+            }
+
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+    }
+
+    class serverConnection implements Runnable{
+
+        Socket socket;
+
+        public serverConnection(Socket s){
+
+            socket=s;
+        }
+
+        @Override
+        public void run() {
+
+            try {
+                sendToServ(socket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+
 }
