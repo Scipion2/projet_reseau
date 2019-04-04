@@ -5,17 +5,17 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class FileF
+public class Queue
 {
 
     Socket client;
-    ArrayBlockingQueue<String> file;
+    ArrayBlockingQueue<String> queue;
 
-    public FileF(Socket src)
+    public Queue(Socket src)
     {
 
         this.client=src;
-        this.file=new ArrayBlockingQueue<String>(100);
+        this.queue =new ArrayBlockingQueue<String>(100);
 
 
     }
@@ -30,10 +30,10 @@ public class FileF
     public void add(String msg,Socket src)
     {
 
-        if(this.isSocket(src))
+        if(this.isSocket(src) && src!=null)
             return;
 
-        file.add(msg);
+        queue.add(msg);
 
     }
 
@@ -47,13 +47,13 @@ public class FileF
     public void send()throws IOException
     {
 
-        if(file.isEmpty())
+        if(queue.isEmpty())
             return;
 
         PrintWriter out=new PrintWriter(client.getOutputStream(),true);
-        String msg=file.peek();
+        String msg= queue.peek();
         out.println(msg);
-        file.remove(msg);
+        queue.remove(msg);
 
 
     }

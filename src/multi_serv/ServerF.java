@@ -10,18 +10,20 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 
 public class ServerF {
 
     int port;
-    List<FileF> fil;
+    List<Queue> allQueue;
+    boolean serverconnect;
 
 
     public ServerF(int port){
         this.port = port;
-        fil=new ArrayList<FileF>();
+        allQueue =new ArrayList<>();
+        allQueue.add(new Queue(null));//ce sera la file principale qui contient tout les messages du chat
+        this.serverconnect=false;
     }
 
     public void launch() throws IOException {
@@ -43,31 +45,32 @@ public class ServerF {
     public void message(String s,Socket src)
     {
 
-        for(int i=0;i<fil.size();++i)
+        for(int i = 0; i< allQueue.size(); ++i)
         {
 
-            FileF temp=fil.get(i);
+            Queue temp= allQueue.get(i);
             temp.add(s,src);
-            fil.set(i,temp);
+            allQueue.set(i,temp);
 
 
         }
 
     }
 
-    public void connecServ() {
+    public void connecServ(int port) {
 
-        int port=1234;
-        Socket socket= null;
+        Socket socket;
         try {
             socket = new Socket("localhost",port);
 
             System.out.println("Serveur connecté à un autre serveur");
+            this.serverconnect=true;
             new Thread(new serverConnection(socket)).start();
             new Thread(new receiveFromServ(socket)).start();
 
         } catch(ConnectException c){
             System.err.println("Pas de 2eme serveur");
+            this.serverconnect=false;
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -77,15 +80,16 @@ public class ServerF {
 
     public void sendToServ(Socket socket) throws IOException{
 
-        PrintWriter out= new PrintWriter(socket.getOutputStream(), true);
+        PrintWriter out= new PrintWriter(socket.getOutputStream(), true);//peut etre input plutot que output
+
+        out.println("SERVERCONNECT");
 
         String toSend;
 
-        Scanner sc=new Scanner(System.in);
-
         while (true) {
 
-            toSend = sc.nextLine();
+            toSend = allQueue.get(0).queue.peek();
+            allQueue.get(0).queue.remove(toSend);
             String tmp = "MSG " + toSend;
             out.println(tmp);
 
@@ -106,7 +110,7 @@ public class ServerF {
 
         try {
             ServerF s = new ServerF(Integer.parseInt(args[0]));
-            s.connecServ();
+            s.connecServ(Integer.parseInt(args[0]));
             s.launch();
         } catch (IOException e) {
             e.printStackTrace();
@@ -123,6 +127,7 @@ public class ServerF {
         BufferedReader in;
         InetAddress hote;
         int port;
+        boolean server;
 
         gestionMSG(Socket socket) throws IOException {
             this.socket = socket;
@@ -130,8 +135,8 @@ public class ServerF {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             hote = socket.getInetAddress();
             port = socket.getPort();
-            FileF f=new FileF(socket);
-            fil.add(f);
+            Queue f=new Queue(socket);
+            allQueue.add(f);
         }
 
         public void run() {
@@ -153,14 +158,20 @@ public class ServerF {
                     {
 
                         pseudo = tampon.substring(8);
-                        for(int i=0;i<fil.size();++i)
+                        for(int i = 0; i< allQueue.size(); ++i)
                         {
 
-                            if(fil.get(i).isSocket(socket))
-                                fil.get(i).threading();
+                            if(allQueue.get(i).isSocket(socket))
+                                allQueue.get(i).threading();
 
                         }
                         message(pseudo+" vient de nous rejoindre",null);
+                        server=false;
+
+                    }else if(tampon.length()>=13 && tampon.substring(0,13).equals("SERVERCONNECT"))
+                    {
+
+                        server=true;
 
                     }else if(tampon.length()>=3 && tampon.substring(0,3).equals("MSG"))
                     {
@@ -171,18 +182,16 @@ public class ServerF {
                        break;
 
 
-                    tampon=null;
-
 
                 } while (true);
 
                 System.out.println("closed");
 
-                for(int i=0;i<fil.size();++i)
+                for(int i = 0; i< allQueue.size(); ++i)
                 {
-                    if(fil.get(i).isSocket(socket))
+                    if(allQueue.get(i).isSocket(socket))
                     {
-                        fil.remove(fil.get(i));
+                        allQueue.remove(allQueue.get(i));
                         break;
                     }
                 }
@@ -227,7 +236,7 @@ public class ServerF {
 
                 if (received == null)
                     break;
-                System.out.println(received);
+                message(received,null);
             }
 
             try {
