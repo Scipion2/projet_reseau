@@ -1,44 +1,48 @@
 package multi_serv;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import server.Server;
+
+import java.io.*;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 
 public class ServerF {
 
-    int port;
+    ServerSocket ss;
     List<Queue> allQueue;
-    boolean serverconnect;
+    static String filePath;
 
 
-    public ServerF(int port){
-        this.port = port;
+    public ServerF(int port)
+    {
+
+        try {
+            this.ss=connecServ(port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         allQueue =new ArrayList<>();
         allQueue.add(new Queue(null));//ce sera la file principale qui contient tout les messages du chat
-        this.serverconnect=false;
+
     }
 
-    public void launch() throws IOException {
-
-       ServerSocket ss = new ServerSocket(port);
+    public void launch(){
 
         try {
                 ss.setReuseAddress(true);
+
             while (true) {
                 new Thread((new gestionMSG(ss.accept()))).start();
             }
         } catch (IOException ex) {
             System.out.println("ss.accept got exception");
             ex.printStackTrace();
-            return;
         }
     }
 
@@ -57,44 +61,71 @@ public class ServerF {
 
     }
 
-    public void connecServ(int port) {
+    public ServerSocket connecServ(int port)throws IOException {
 
         Socket socket;
         try {
             socket = new Socket("localhost",port);
 
             System.out.println("Serveur connecté à un autre serveur");
-            this.serverconnect=true;
+            PrintWriter out=new PrintWriter(socket.getOutputStream(),true);
+            BufferedReader in=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            out.println("SERVERCONNECT");
+            ServerSocket ss=new ServerSocket(Integer.parseInt(in.readLine()));
+            out.println(ss.getInetAddress());
+            this.filePath=in.readLine();
+
             new Thread(new serverConnection(socket)).start();
             new Thread(new receiveFromServ(socket)).start();
 
+            return ss;
+
+
         } catch(ConnectException c){
             System.err.println("Pas de 2eme serveur");
-            this.serverconnect=false;
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            File adressList;
+
+            if(System.getProperty("os.name").equals("WINDOWS"))
+                adressList=new File(System.getProperty("user.dir")+"\\pairs.cfg");
+            else
+                adressList=new File(System.getProperty("user.dir")+"/pairs.cfg");
+
+            if(adressList.createNewFile())
+                System.out.println("adress list created");
+            else
+                System.out.println("adress list file already exist");
+
+            this.filePath=adressList.getAbsolutePath();
+            ServerSocket ss=new ServerSocket(port);
+            addServ("master",ss.getLocalPort(),String.valueOf(ss.getInetAddress()));
+
+            return ss;
+
         }
 
     }
 
     public void sendToServ(Socket socket) throws IOException{
 
-        PrintWriter out= new PrintWriter(socket.getOutputStream(), true);//peut etre input plutot que output
+        PrintWriter out= new PrintWriter(socket.getOutputStream(), true);
 
-        out.println("SERVERCONNECT");
+        for(String toSend = "SERVERCONNECT"; toSend!=null; toSend = allQueue.get(0).queue.poll())
+        {
 
-        String toSend;
+            if(toSend.equals("SERVERCONNECT"))
+                out.println(toSend);
+            else
+            {
 
-        while (true) {
+                String tmp = "MSG " + toSend;
+                out.println(tmp);
 
-            toSend = allQueue.get(0).queue.peek();
-            allQueue.get(0).queue.remove(toSend);
-            String tmp = "MSG " + toSend;
-            out.println(tmp);
+            }
+
 
         }
-
 
     }
 
@@ -108,16 +139,16 @@ public class ServerF {
 
         }
 
-        try {
-            ServerF s = new ServerF(Integer.parseInt(args[0]));
-            s.connecServ(Integer.parseInt(args[0]));
-            s.launch();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        ServerF s = new ServerF(Integer.parseInt(args[0]));
+        s.launch();
+        File file=new File(filePath);
+        if(file.delete())
+            System.out.println("file deleted");
+        else
+            System.out.println("delete c'est de la merde");
 
     }
+
 
 
     class gestionMSG implements Runnable {
@@ -127,7 +158,6 @@ public class ServerF {
         BufferedReader in;
         InetAddress hote;
         int port;
-        boolean server;
 
         gestionMSG(Socket socket) throws IOException {
             this.socket = socket;
@@ -166,12 +196,13 @@ public class ServerF {
 
                         }
                         message(pseudo+" vient de nous rejoindre",null);
-                        server=false;
 
                     }else if(tampon.length()>=13 && tampon.substring(0,13).equals("SERVERCONNECT"))
                     {
 
-                        server=true;
+                        int newPort=getNewPort();
+                        out.println(newPort);
+                        addServ("peer",newPort,in.readLine());
 
                     }else if(tampon.length()>=3 && tampon.substring(0,3).equals("MSG"))
                     {
@@ -209,6 +240,44 @@ public class ServerF {
             }
         }
 
+    }
+
+    private void addServ(String name,int newPort, String adress)
+    {
+
+        BufferedOutputStream bos;
+        String toWrite=name+" = "+adress+" "+newPort;
+
+
+        try {
+
+            bos=new BufferedOutputStream(new FileOutputStream(new File(filePath)));
+            bos.write(toWrite.getBytes());
+            bos.close();
+        } catch (IOException e) {
+            System.out.println("this file does not exist FDP");
+        }
+
+    }
+
+
+    public int getNewPort()
+    {
+
+        BufferedInputStream bis;
+        int port=0;
+        try {
+
+            bis=new BufferedInputStream(new FileInputStream(new File(filePath)));
+            String temp=new String(bis.readAllBytes());
+            port=Integer.parseInt(temp.substring(temp.lastIndexOf(' ')+1));
+            bis.close();
+
+        } catch (IOException e) {
+            System.out.println("this file does not exist FDP");
+        }
+
+        return port++;
     }
 
     class receiveFromServ implements Runnable{
