@@ -1,7 +1,5 @@
 package multi_serv;
 
-import server.Server;
-
 import java.io.*;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -9,9 +7,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
-
+//version 2.2
 public class ServerF {
 
     ServerSocket ss;
@@ -97,7 +94,7 @@ public class ServerF {
             else
                 System.out.println("adress list file already exist");
 
-            this.filePath=adressList.getAbsolutePath();
+            filePath=adressList.getAbsolutePath();
             ServerSocket ss=new ServerSocket(port);
             addServ("master",ss.getLocalPort(),String.valueOf(ss.getInetAddress()));
 
@@ -277,7 +274,7 @@ public class ServerF {
             System.out.println("this file does not exist FDP");
         }
 
-        return port++;
+        return ++port;
     }
 
     class receiveFromServ implements Runnable{
