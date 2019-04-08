@@ -5,42 +5,46 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class Queue
+public class QueueF
 {
 
     Socket client;
     ArrayBlockingQueue<String> queue;
+    boolean isServer;
 
-    public Queue(Socket src)
+    public QueueF(Socket src,boolean serv)
     {
 
         this.client=src;
-        this.queue =new ArrayBlockingQueue<String>(100);
+        this.queue =new ArrayBlockingQueue<>(100);
+        isServer=serv;
 
 
     }
 
-    public void threading()
+    void threading()
     {
 
         new Thread((new Handler())).start();
 
     }
 
-    public void add(String msg,Socket src)
+    void add(String msg,Socket src,boolean fromServ)
     {
 
         if(this.isSocket(src) && src!=null)
+            return;
+        if(fromServ && isServer)
             return;
 
         queue.add(msg);
 
     }
 
-    public boolean isSocket(Socket src)
+    boolean isSocket(Socket src)
     {
 
-        return src==this.client ? true:false;
+        return src == this.client;
 
     }
 
@@ -51,9 +55,8 @@ public class Queue
             return;
 
         PrintWriter out=new PrintWriter(client.getOutputStream(),true);
-        String msg= queue.peek();
+        String msg= queue.poll();
         out.println(msg);
-        queue.remove(msg);
 
 
     }

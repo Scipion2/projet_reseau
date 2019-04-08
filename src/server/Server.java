@@ -11,12 +11,12 @@ import java.util.List;
 public class Server {
 
     int port;
-    List<File> fil;
+    List<Queue> fil;
 
 
     public Server(int port){
         this.port = port;
-        fil=new ArrayList<File>();
+        fil=new ArrayList<Queue>();
     }
 
     public void launch() throws IOException {
@@ -41,7 +41,7 @@ public class Server {
         for(int i=0;i<fil.size();++i)
         {
 
-            File temp=fil.get(i);
+            Queue temp=fil.get(i);
             temp.add(s,src);
             fil.set(i,temp);
 
@@ -84,7 +84,7 @@ public class Server {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             hote = socket.getInetAddress();
             port = socket.getPort();
-            File f=new File(socket);
+            Queue f=new Queue(socket);
             fil.add(f);
         }
 
