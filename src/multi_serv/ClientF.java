@@ -12,10 +12,10 @@ import static java.lang.System.exit;
 
 public class ClientF {
 
-    private int port;
-    private String adr;
+    protected int port;
+    protected String adr;
 
-    private ClientF(String adr, int port)
+    protected ClientF(String adr, int port)
     {
 
         this.port=port;
@@ -23,14 +23,14 @@ public class ClientF {
 
     }
 
-    private Socket connect()throws IOException
+    protected Socket connect()throws IOException
     {
 
         return new Socket(adr,port);
 
     }
 
-    private void launch() throws IOException
+    protected void launch() throws IOException
     {
 
         Socket client=this.connect();
