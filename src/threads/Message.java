@@ -40,10 +40,10 @@ public class Message implements Runnable
                 QueueF messageList=new QueueF(client,false);
                 server.addQueue(messageList);
                 server.displayServerSide("CONNECT received");
-                String pseudal = connectClient();
-                server.message(pseudal+" vient de nous rejoindre",null,false);
-                server.displayServerSide(pseudal+" logged in");
-                new Thread(new ReceivedFromClient(in,server, pseudal,client)).start();
+                String pseudo = connectClient();
+                server.message(pseudo+" vient de nous rejoindre",null,false);
+                server.displayServerSide(pseudo+" logged in");
+                new Thread(new ReceivedFromClient(in,server, pseudo,client)).start();
                 new Thread(new SendToClient(messageList)).start();
 
             }else if(tampon.length()>=13 && tampon.substring(0,13).equals("SERVERCONNECT"))

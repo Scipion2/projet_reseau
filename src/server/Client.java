@@ -15,14 +15,12 @@ public class Client
 
     int port;
     String adr;
-    String pseudal;
+    String pseudo;
 
     public Client(String adr,int port)throws IOException
     {
-
         this.port=port;
         this.adr=adr;
-
     }
 
     Socket connect()throws IOException
@@ -40,13 +38,13 @@ public class Client
         String toSend;
 
         Scanner sc=new Scanner(System.in);
-        System.out.println("veuillez choisir votre pseudal");
-        pseudal=sc.nextLine();
+        System.out.println("veuillez choisir votre pseudo");
+        pseudo =sc.nextLine();
 
         PrintWriter out = new PrintWriter(client.getOutputStream(), true);
         BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-        out.println("CONNECT "+pseudal);
+        out.println("CONNECT "+ pseudo);
         
         new Thread(new Handler(client)).start();
 
